@@ -1,20 +1,23 @@
+// Define the minimum criteria requirement (Variable minimum requirement)
+var minimumCriteria = 2;
+
 // Define the Lowercase Ascii set {abcdefghijklmnopqrstuvwxyz}
-let lowercase = [
+var lowercase = [
   97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112,
   113, 114, 115, 116, 117, 118, 119, 120, 121, 122
 ];
 
 // Define the Uppercase Ascii set {ABCDEFGHIJKLMNOPQRSTUVWXYZ}
-let uppercase = [
+var uppercase = [
   65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83,
   84, 85, 86, 87, 88, 89, 90
 ];
 
 // Define the Numeric Ascii set {0123456789}
-let numeric = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57];
+var numeric = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57];
 
 // Define the Special characters Ascii set { !"#$%&'()*+,-./:;<=>?@[\]^_`{|}~}
-let special = [
+var special = [
   32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 58, 59, 60,
   61, 62, 63, 64, 91, 92, 93, 94, 95, 96, 123, 124, 125, 126
 ];
@@ -71,48 +74,127 @@ let confirmCriteria = function(requirement) {
 let getUserCriteria = function(userCriteria) {
   // Check for minium Criteria Selection
   let minCriteria = 0;
+  // Get the valid weighted sum
+  let sum = 0;
 
   // Generate prompts to obtain user password Criteria
   for(aCriteria in userCriteria){
     let ans;
     if(aCriteria == 'passwordLength'){
       ans = getPasswordLength();
+    } else if (aCriteria == 'minimumFactors') {
+      ans = minCriteria;
     } else {
       ans = confirmCriteria(aCriteria);
-      if(ans){
+      if (ans) {
         minCriteria++;
+        sum += ans;
       }
     }
 
+    // Assign temporary weight to user criteria
     userCriteria[aCriteria] = ans;
   }
 
-  if(!minCriteria){
-    // Inform user of insufficient criteria selection
-    window.alert(`You selected ${minCriteria} criteria factors!!!`
-    + `\nYOU NEED TO SELECT A MINIMUM OF ONE CRITERION!`);
-    return getUserCriteria(userCriteria);
+  if (minCriteria < minimumCriteria) {
+      // Inform user of insufficient criteria selection
+      window.alert(
+          `You selected ${minCriteria} criteria factors!!!` +
+          `\nYOU NEED TO SELECT A MINIMUM OF ${minimumCriteria} CRITERIA!!!`
+      );
+      return getUserCriteria(userCriteria);
   }
 
-  return;
+  return sum;
 }
 
+// Use the User Criteria to generate the random Password
+let getValidPasswordSet = function (validCriteria, weights) {
+  // Track weights to ensure conformity with password length
+  let newWeight = 0;
+  let miniWeight = 0;
+  // The valid Criteria Array
+  let possibleSet = [];
+
+  // Adjust the weights to sum up to the password length
+  for (aCriteria in validCriteria) {
+    if (
+      !(aCriteria == 'passwordLength' || aCriteria == 'minimumFactors') &&
+      validCriteria[aCriteria]
+    ) {
+      // Ensure the password length is respected
+      if (validCriteria.minimumFactors == 1) {
+          newWeight = validCriteria.passwordLength - miniWeight;
+      } else {
+          newWeight =
+              validCriteria[aCriteria] * validCriteria.passwordLength;
+          newWeight = Math.floor(newWeight / weights);
+      }
+
+      // This ensures that every user criteria gets generated to this length
+      validCriteria[aCriteria] = newWeight;
+      validCriteria.minimumFactors--;
+      miniWeight += newWeight;
+
+      // Generate the possible Password set
+      possibleSet = possibleSet.concat(window[aCriteria]);
+    }
+  }
+
+  // The universal password list 
+  return possibleSet;
+}
+
+let getRandomPassword = function (userCriteria, passwordList) {
+  // Valid Password Array
+  passwordArray = [];
+  for (let i = 0; i < userCriteria.passwordLength; i++) {
+    let selected = passwordList[Math.floor(Math.random() * passwordList.length)];
+    passwordArray.push(selected);
+
+    // Ensure that the password list remains valid
+    for (aCriteria in userCriteria) {
+      if (
+          !(aCriteria == 'passwordLength' || aCriteria == 'minimumFactors') &&
+          userCriteria[aCriteria] &&
+          window[aCriteria].includes(selected)
+      ) {
+          // Keep track of criteria fulfillment
+          userCriteria[aCriteria]--;
+          // Adjust possible Password Array
+          if(!userCriteria[aCriteria]){
+            let index = passwordList.indexOf(window[aCriteria][0]);
+            passwordList.splice(index, window[aCriteria].length);
+          }
+      }
+    }
+  }
+
+  // return generate Password
+  return passwordArray;
+}
 
 // The main function to control the password generation process
 function generatePassword() {
   // Start with a blank User Criteria object
   let userCriteria = {
-    passwordLength: 0,
-    special: 0,
-    uppercase: 0,
-    numeric: 0,
-    lowercase: 0,
+      passwordLength: 0,
+      numeric: 0,
+      special: 0,
+      uppercase: 0,
+      lowercase: 0,
+      minimumFactors: 0,
   };
 
   // Generate the User Criteria
-  getUserCriteria(userCriteria);
+  let weightedSum = getUserCriteria(userCriteria);
+  // Generate the Password Super Set
+  let requiredSet = getValidPasswordSet(userCriteria, weightedSum);
+  // Generate the ASCII password meeting all requirements
+  let plainPassword = getRandomPassword(userCriteria, requiredSet);
 
-  return '';
+  // Return converted string
+  return generateString(plainPassword);
 }
 
 // Assignment Code

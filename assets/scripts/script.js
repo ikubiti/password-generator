@@ -1,20 +1,13 @@
+
+// Assignment Code
+var generateBtn = document.querySelector("#generate");
+// Required for password selection and highlighting
+var passwordText = document.querySelector('#password');
+
 // Define the minimum criteria requirement (Variable minimum requirement)
-var minimumCriteria = 2;
-
-// Define the Lowercase Ascii set {abcdefghijklmnopqrstuvwxyz}
-var lowercase = [
-  97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112,
-  113, 114, 115, 116, 117, 118, 119, 120, 121, 122
-];
-
-// Define the Uppercase Ascii set {ABCDEFGHIJKLMNOPQRSTUVWXYZ}
-var uppercase = [
-  65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83,
-  84, 85, 86, 87, 88, 89, 90
-];
-
-// Define the Numeric Ascii set {0123456789}
-var numeric = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57];
+var minimumCriteria = 1;
+var minLength = 8;
+var maxLength = 128;
 
 // Define the Special characters Ascii set { !"#$%&'()*+,-./:;<=>?@[\]^_`{|}~}
 var special = [
@@ -22,192 +15,138 @@ var special = [
   61, 62, 63, 64, 91, 92, 93, 94, 95, 96, 123, 124, 125, 126
 ];
 
-//  Generate the string from an array of Ascii code characters
-let generateString = function(arraySet){
-  let newWord = '';
-  for(let i = 0; i < arraySet.length; i++){
-    newWord = newWord + String.fromCharCode(arraySet[i]);
-  }
-
-  return newWord;
-}
+// To hold user selected criteria
+var selectedCriteria = [];
+var passwordLength;
 
 // Get the password length
 let getPasswordLength = function () {
   // Get the user's desired length
-  let ans = window.prompt(
-      'Welcome to the Secure Password Generator!\n\n'
-      + 'Please enter your desired password length(Min=8, Max=128): '
-  );
+  let ans = window.prompt('Welcome to the Secure Password Generator!\n\n'
+      + `Please enter your desired password length(Min=${minLength}, Max=${maxLength}):`);
 
   // Convert String to a number
   let length = Number.parseInt(ans);
   // Check for valid entry or continue until a valid response is obtained
-  if (!Number.isInteger(length) || length < 8 || length > 128) {
-    window.alert(
-      `"${ans}" IS NOT A VALID PASSWORD LENGTH!` +
-      `\nIT MUST BE A NUMBER BETWEEN 8 AND 128 INCLUSIVE!`
-    );
+  if (!Number.isInteger(length) || length < minLength || length > maxLength) {
+    window.alert(`"${ans}" IS NOT A VALID PASSWORD LENGTH!` +
+      `\nIT MUST BE A NUMBER BETWEEN ${minLength} AND ${maxLength} INCLUSIVE!`);
     return getPasswordLength();
   }
 
   // Return valid password length
-  return ans;
-}
-
-// Get the password requirements
-let confirmCriteria = function(requirement) {
-  // Criteria weight To determine number of characters for each requirement
-  let weight = 0;
-
-  // Get the user's criteria input
-  if (window.confirm(`Do you want to include ${requirement} characters?`)) {
-    // Generate random weights
-    weight = Math.floor(Math.random() * 4) + 4;
-  }
-
-  // Return the Criteria's weight
-  return weight;
+  return length;
 }
 
 // Get valid user Criteria
 let getUserCriteria = function(userCriteria) {
-  // Check for minium Criteria Selection
-  let minCriteria = 0;
-  // Get the valid weighted sum
-  let sum = 0;
+  // Get the password length
+  passwordLength = getPasswordLength();
 
-  // Generate prompts to obtain user password Criteria
-  for(aCriteria in userCriteria){
-    let ans;
-    if(aCriteria == 'passwordLength'){
-      ans = getPasswordLength();
-    } else if (aCriteria == 'minimumFactors') {
-      ans = minCriteria;
-    } else {
-      ans = confirmCriteria(aCriteria);
-      if (ans) {
-        minCriteria++;
-        sum += ans;
+  selectedCriteria = [];
+  // iterate over the user criteria options
+  var totalWeight = 0;
+  for (aCriteria in userCriteria) {
+      if (window.confirm(`Do you want to include ${aCriteria} characters?`)) {
+          selectedCriteria.push(aCriteria);
+          // Generate random weights
+          userCriteria[aCriteria] = Math.floor(Math.random() * 10) + 4;
+          totalWeight += userCriteria[aCriteria];
+      } else {
+          userCriteria[aCriteria] = 0;
       }
-    }
-
-    // Assign temporary weight to user criteria
-    userCriteria[aCriteria] = ans;
   }
 
-  if (minCriteria < minimumCriteria) {
-      // Inform user of insufficient criteria selection
-      window.alert(
-          `You selected ${minCriteria} criteria factors!!!` +
-          `\nYOU NEED TO SELECT A MINIMUM OF ${minimumCriteria} CRITERIA!!!`
-      );
+  // Inform user of insufficient criteria selection
+  if (selectedCriteria.length < minimumCriteria) {
+      window.alert( `You selected "${selectedCriteria.length}" factors!!!` +
+        `\nYOU NEED TO SELECT A MINIMUM OF ${minimumCriteria} CRITERIA!!!`);
       return getUserCriteria(userCriteria);
   }
 
-  return sum;
+  return totalWeight;
+}
+
+// Get a valid password character
+let getRandomCharacter = function(start, length) {
+  return String.fromCharCode(Math.floor(Math.random() * length) + start);
 }
 
 // Use the User Criteria to generate the random Password
-let getValidPasswordSet = function (validCriteria, weights) {
-  // Track weights to ensure conformity with password length
-  let newWeight = 0;
-  let miniWeight = 0;
-  // The valid Criteria Array
-  let possibleSet = [];
-
-  // Adjust the weights to sum up to the password length
-  for (aCriteria in validCriteria) {
-    if (
-      !(aCriteria == 'passwordLength' || aCriteria == 'minimumFactors') &&
-      validCriteria[aCriteria]
-    ) {
-      // Ensure the password length is respected
-      if (validCriteria.minimumFactors == 1) {
-          newWeight = validCriteria.passwordLength - miniWeight;
-      } else {
-          newWeight =
-              validCriteria[aCriteria] * validCriteria.passwordLength;
-          newWeight = Math.floor(newWeight / weights);
-      }
-
-      // This ensures that every user criteria gets generated to this length
-      validCriteria[aCriteria] = newWeight;
-      validCriteria.minimumFactors--;
-      miniWeight += newWeight;
-
-      // Generate the possible Password set
-      possibleSet = possibleSet.concat(window[aCriteria]);
+let getValidPasswordSet = function (validCriteria, totalWeight) {
+  let partLength = 0;
+  // Allocate random space for each criterion => ensure every criterion gets truly represented
+  for(let i = 0; i < selectedCriteria.length; i++) {
+    if(i === selectedCriteria.length - 1){
+      validCriteria[selectedCriteria[i]] = passwordLength - partLength;
+    } else {
+      let newWeight = validCriteria[selectedCriteria[i]] * passwordLength;
+      validCriteria[selectedCriteria[i]] = Math.floor(newWeight / totalWeight);
+      partLength += validCriteria[selectedCriteria[i]];      
     }
   }
 
-  // The universal password list 
-  return possibleSet;
-}
+  // The selected criteria
+  let criteriaSelect = selectedCriteria.toString();
+  // Now all conditions met to generate the password
+  let newPassword = '';
+  for (let i = 0; i < passwordLength; i++) {
+    let aCriteria = selectedCriteria[Math.floor(Math.random() * selectedCriteria.length)];
+    if (aCriteria == 'lowercase') {
+      newPassword = newPassword + getRandomCharacter(97, 26);
+    } else if(aCriteria == 'uppercase') {
+      newPassword = newPassword + getRandomCharacter(65, 26);
+    } else if(aCriteria == 'numeric') {
+      newPassword = newPassword + getRandomCharacter(48, 10);
+    } else {
+      let aCharacter = special[Math.floor(Math.random() * special.length)];
+      newPassword = newPassword + String.fromCharCode(aCharacter);
+    }
 
-let getRandomPassword = function (userCriteria, passwordList) {
-  // Valid Password Array
-  passwordArray = [];
-  for (let i = 0; i < userCriteria.passwordLength; i++) {
-    let selected = passwordList[Math.floor(Math.random() * passwordList.length)];
-    passwordArray.push(selected);
-
-    // Ensure that the password list remains valid
-    for (aCriteria in userCriteria) {
-      if (
-          !(aCriteria == 'passwordLength' || aCriteria == 'minimumFactors') &&
-          userCriteria[aCriteria] &&
-          window[aCriteria].includes(selected)
-      ) {
-          // Keep track of criteria fulfillment
-          userCriteria[aCriteria]--;
-          // Adjust possible Password Array
-          if(!userCriteria[aCriteria]){
-            let index = passwordList.indexOf(window[aCriteria][0]);
-            passwordList.splice(index, window[aCriteria].length);
-          }
-      }
+    // Adjust possible Password Array
+    if (--validCriteria[aCriteria] == 0) {
+      let index = selectedCriteria.indexOf(aCriteria);
+      selectedCriteria.splice(index, 1);
     }
   }
 
-  // return generate Password
-  return passwordArray;
+  // The generated password
+  alert(`Your new secure password composed of
+  ${criteriaSelect} characters with length ${passwordLength} is: \n${newPassword}`);
+  return newPassword;
 }
 
 // The main function to control the password generation process
 function generatePassword() {
   // Start with a blank User Criteria object
   let userCriteria = {
-      passwordLength: 0,
-      numeric: 0,
-      special: 0,
-      uppercase: 0,
-      lowercase: 0,
-      minimumFactors: 0,
+    numeric: 0,
+    special: 0,
+    uppercase: 0,
+    lowercase: 0
   };
 
   // Generate the User Criteria
   let weightedSum = getUserCriteria(userCriteria);
-  // Generate the Password Super Set
-  let requiredSet = getValidPasswordSet(userCriteria, weightedSum);
-  // Generate the ASCII password meeting all requirements
-  let plainPassword = getRandomPassword(userCriteria, requiredSet);
-
-  // Return converted string
-  return generateString(plainPassword);
+  // Generate the secure password according to the user selected criteria
+  return getValidPasswordSet(userCriteria, weightedSum);
 }
-
-// Assignment Code
-var generateBtn = document.querySelector("#generate");
 
 // Write password to the #password input
 function writePassword() {
   var password = generatePassword();
-  var passwordText = document.querySelector("#password");
-
   passwordText.value = password;
+}
 
+// Select the password in the text area for highlighting
+function makeSelection () {
+  passwordText.select();
+  // Copy the new Password to the clipboard for easy use
+  navigator.clipboard.writeText(newPassword);
 }
 
 // Add event listener to generate button
 generateBtn.addEventListener("click", writePassword);
+
+// Added event listener to automatically select all text for new password
+passwordText.addEventListener('click', makeSelection);

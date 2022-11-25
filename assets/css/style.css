@@ -23,11 +23,13 @@ body {
   padding-right: 20px;
 }
 
+/* Improved header with text shadow */
 #main-header {
   text-align: center;
   padding: 20px;
   padding-top: 0px;
-  color: hsl(206, 17%, 28%);
+  color: white;
+  text-shadow: 1px 1px 2px black, 0 0 25px blue, 0 0 5px darkblue;
 }
 
 .card {
@@ -40,6 +42,11 @@ body {
   margin: 0 auto;
   max-width: 800px;
   padding: 30px 40px;
+}
+
+/* Text Shadow for the card-header */
+.card-header {
+  text-shadow: -1px 0 coral, 0 1px coral, 1px 0 coral, 0 -1px coral;
 }
 
 .card-header::after {
@@ -93,6 +100,14 @@ button[disabled] {
   background: #c0c7cf;
 }
 
+/* Change appearance to attract the attention of the user */
+#generate:hover {
+  color: yellowgreen;
+  font-weight: bold;
+  font-size: 1.8rem;
+  background-color: blue;
+}
+
 .float-right {
   float: right;
 }
@@ -101,7 +116,6 @@ button[disabled] {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  border: none;
   display: block;
   width: 100%;
   padding-top: 15px;
@@ -118,6 +132,29 @@ button[disabled] {
   overflow: hidden;
 }
 
+/* Adding effects to the main text area */
+.card-body:hover {
+  box-shadow: inset 0px 0px 8px lightcoral, 0 0 15px lightcoral;
+  transition: box-shadow 0.5s ease-in-out;
+}
+
+/* overwrite default focus-visible behavior */
+#password:focus-visible {
+  outline: 2px dashed lightgreen;
+}
+
+/* set content highlight color and background */
+#password::selection {
+  background-color: #2aefcb;
+  color: blue;
+}
+
+/* Change font size on gaining focus */
+#password:focus {
+  font-size: 1.5rem;
+}
+
+/* media query for different screen size */
 @media (max-width: 690px) {
   .btn {
     font-size: 1rem;

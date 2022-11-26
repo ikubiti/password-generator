@@ -1,4 +1,3 @@
-
 // Assignment Code
 var generateBtn = document.querySelector("#generate");
 // Required for password selection and highlighting
@@ -142,7 +141,7 @@ function writePassword() {
 function makeSelection () {
   passwordText.select();
   // Copy the new Password to the clipboard for easy use
-  navigator.clipboard.writeText(newPassword);
+  navigator.clipboard.writeText(passwordText.value);
 }
 
 // Add event listener to generate button

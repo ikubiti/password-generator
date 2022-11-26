@@ -38,7 +38,7 @@ THEN the password is either displayed in an alert or written to the page
 
 ## Installation
 
-Please visit https://ikubiti.github.io/
+Please visit https://ikubiti.github.io/password-generator/
 
 ## Usage
 
